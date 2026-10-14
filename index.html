@@ -396,6 +396,11 @@ const ACTIVITIES = ["SocaKombat","CrossFit","Resistance / Strength Training","St
       if(CONFIG.ENDPOINT){
         const res=await fetch(CONFIG.ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(d)});
         const out=await res.json();
+        if(out.error==="duplicate"){
+          go(2);
+          notice.textContent=d.email+" is already registered. Check your inbox (and spam) for the email \"Your Hangout Pass\". To register someone else, use their own email.";
+          notice.hidden=false; return;
+        }
         if(!out.ok) throw new Error(out.error||"save failed");
         if(out.code) d.code=out.code;
       }
