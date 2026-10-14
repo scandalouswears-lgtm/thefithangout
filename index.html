@@ -149,6 +149,39 @@ button,.btn{font:inherit;cursor:pointer;text-decoration:none}
 .thanks:not([hidden]) .pass{animation:pop .45s cubic-bezier(.2,.9,.3,1.2)}
 .burst{position:fixed;inset:0;pointer-events:none;z-index:60}
 
+/* Spots-left strip (shows when the event is close to full) */
+.scarce{display:flex;align-items:center;gap:10px;margin:0 0 18px;padding:10px 12px;border:1px solid var(--neon-dim);border-radius:4px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.scarce i{width:8px;height:8px;border-radius:50%;background:var(--neon);flex:none;animation:pulse 1.4s ease-in-out infinite}
+.scarce b{color:var(--neon);font-family:var(--f-mono)}
+@keyframes pulse{50%{opacity:.25;transform:scale(.7)}}
+
+/* Full house: registration closed + early access for the next Hangout */
+.full{display:grid;gap:22px}
+.kicker{margin:0 0 10px;font-size:12px;letter-spacing:.16em;color:var(--err)}
+.full h2{margin:0 0 8px;font-size:clamp(28px,3.2vw,38px)}
+.crowd{position:relative;margin:0;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:14px;overflow:hidden}
+.dots-wrap{position:relative}
+.dots{display:grid;grid-template-columns:repeat(auto-fill,minmax(9px,1fr));gap:5px}
+.dots span{aspect-ratio:1;border-radius:50%;background:var(--line);animation:fill .3s ease-out forwards;animation-delay:calc(var(--i) * 6ms)}
+@keyframes fill{to{background:var(--neon);box-shadow:0 0 6px rgba(43,255,43,.55)}}
+.crowd figcaption{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:12px;letter-spacing:.14em;color:var(--mute)}
+.count{font-family:var(--f-mono);font-size:clamp(26px,3vw,34px);letter-spacing:.02em;color:var(--paper)}
+.count b{color:var(--neon)}
+.stamp{position:absolute;top:50%;left:50%;padding:8px 16px;border:4px solid var(--neon);border-radius:6px;color:var(--neon);background:rgba(13,17,14,.82);
+  font-size:clamp(22px,3.2vw,34px);font-weight:900;letter-spacing:.06em;white-space:nowrap;transform:translate(-50%,-50%) rotate(-9deg);
+  animation:stamp .4s cubic-bezier(.3,1.6,.5,1) 1.3s both;box-shadow:0 0 24px rgba(43,255,43,.35)}
+@keyframes stamp{from{opacity:0;transform:translate(-50%,-50%) rotate(-9deg) scale(2.4)}to{opacity:1;transform:translate(-50%,-50%) rotate(-9deg) scale(1)}}
+.next{display:grid;gap:14px;border-top:2px dashed var(--line);padding-top:22px}
+.next .q{text-wrap:balance}
+.next .hint{margin:-6px 0 0}
+.next form{gap:14px}
+.early-pass .pass-top{justify-content:space-between}
+.early-pass .pass-body{grid-template-columns:auto minmax(0,1fr);align-items:center;gap:18px}
+.place{font-family:var(--f-mono);font-weight:700;font-size:clamp(48px,7vw,64px);line-height:1;color:var(--neon)}
+.place small{display:block;font-family:var(--f-wide);font-size:10px;letter-spacing:.14em;color:var(--mute);font-weight:600;margin-bottom:4px}
+.early-pass .pass-name{font-size:clamp(18px,2.2vw,22px)}
+.early-pass p{margin:6px 0 0;font-size:13px;color:var(--mute);overflow-wrap:anywhere}
+
 @media (max-width:860px){
   .wrap{grid-template-columns:minmax(0,1fr)}
   .reg{position:relative;top:0}
@@ -196,6 +229,7 @@ button,.btn{font:inherit;cursor:pointer;text-decoration:none}
 
   <section class="reg" aria-live="polite">
     <div id="formView">
+      <p class="scarce" id="scarce" hidden><i></i><span>Only <b id="leftCount"></b> spots left</span></p>
       <div class="reg-head">
         <h2 class="caps">Register</h2>
         <span class="stepcount caps" id="stepCount">Step 1 of 4</span>
@@ -288,6 +322,52 @@ button,.btn{font:inherit;cursor:pointer;text-decoration:none}
         <button class="ghost wide" id="again" type="button">Register someone else</button>
       </div>
     </div>
+
+    <div class="full" id="fullView" hidden>
+      <div>
+        <p class="kicker caps">Registration closed</p>
+        <h2 class="caps" id="fullTitle" tabindex="-1">The floor is full.</h2>
+        <p class="lede">All <span class="capN">181</span> spots for 31 October are taken. Already registered? Your Hangout Pass is in your inbox. See you on the floor.</p>
+      </div>
+
+      <figure class="crowd" aria-label="181 of 181 spots taken">
+        <div class="dots-wrap"><div class="dots" id="dots" aria-hidden="true"></div><div class="stamp caps" aria-hidden="true">Full house</div></div>
+        <figcaption class="caps"><span class="count"><b class="capN">181</b>/<span class="capN">181</span></span><span>Every dot is someone on the floor</span></figcaption>
+      </figure>
+
+      <div class="next" id="earlyView">
+        <h3 class="q">Missed this one? Be first through the door next time.</h3>
+        <p class="hint">Get in line for the next Hangout. You'll get the registration link before it goes public, while every spot is still open.</p>
+        <form id="earlyForm" novalidate>
+          <div class="field" id="f-ename">
+            <label for="ename">Full name</label>
+            <input id="ename" type="text" autocomplete="name" placeholder="Ama Mensah" required>
+            <div class="msg"></div>
+          </div>
+          <div class="field" id="f-eemail">
+            <label for="eemail">Email</label>
+            <input id="eemail" type="email" autocomplete="email" placeholder="ama@example.com" required>
+            <div class="msg"></div>
+          </div>
+          <div class="hp" aria-hidden="true"><label for="ewebsite">Website</label><input id="ewebsite" type="text" tabindex="-1" autocomplete="off"></div>
+          <p class="notice" id="earlyNotice" hidden></p>
+          <button class="submit" id="earlyBtn" type="submit"><span id="earlyLabel">Get in line</span><span aria-hidden="true">→</span></button>
+        </form>
+      </div>
+
+      <div class="thanks" id="earlyDone" hidden>
+        <article class="pass early-pass" aria-label="Your early access ticket">
+          <div class="pass-top caps"><span>Early access</span><span>Next Hangout</span></div>
+          <div class="pass-body">
+            <div class="place"><small class="caps">In line</small>#<span id="placeNo"></span></div>
+            <div><div class="pass-name" id="earlyName"></div><p id="earlyText"></p></div>
+          </div>
+        </article>
+        <div class="actions">
+          <a class="ghost wa wide" id="earlyWa" target="_blank" rel="noopener">Get your crew in line on WhatsApp</a>
+        </div>
+      </div>
+    </div>
   </section>
 </main>
 <canvas class="burst" id="burst" aria-hidden="true"></canvas>
@@ -313,6 +393,53 @@ const ACTIVITIES = ["SocaKombat","CrossFit","Resistance / Strength Training","St
   ["factDate","passDate"].forEach(id=>$(id).textContent=CONFIG.DATE_LABEL);
   ["factTime","passTime"].forEach(id=>$(id).textContent=CONFIG.TIME_LABEL);
   if(!CONFIG.ENDPOINT) $("demoNote").hidden = false;
+
+  // Capacity: ask the backend if registration is still open. Add ?preview=full to the URL to see the closed view.
+  const PREVIEW_FULL = /[?&]preview=full\b/.test(location.search);
+  if(PREVIEW_FULL) showFull(181);
+  else if(CONFIG.ENDPOINT){
+    fetch(CONFIG.ENDPOINT+"?status=1").then(r=>r.json()).then(s=>{
+      if(!s.ok) return;
+      if(!s.open) showFull(s.capacity);
+      else if(s.left<=30){ $("leftCount").textContent=s.left; $("scarce").hidden=false; }
+    }).catch(()=>{});
+  }
+
+  function showFull(cap){
+    document.querySelectorAll(".capN").forEach(n=>n.textContent=cap);
+    document.querySelector(".crowd").setAttribute("aria-label",cap+" of "+cap+" spots taken");
+    const dots=$("dots"); dots.innerHTML="";
+    for(let i=0;i<cap;i++){const s=document.createElement("span");s.style.setProperty("--i",i);dots.appendChild(s);}
+    $("formView").hidden=true; $("thanks").hidden=true; $("fullView").hidden=false;
+  }
+
+  $("earlyForm").addEventListener("submit", async ev=>{
+    ev.preventDefault();
+    const e={type:"early",name:$("ename").value.trim().replace(/\s+/g," "),email:$("eemail").value.trim().toLowerCase(),website:$("ewebsite").value};
+    let ok=true;
+    if(e.name.length<2){setErr("ename","Enter your full name.");ok=false}else setErr("ename");
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e.email)){setErr("eemail","Enter a valid email address.");ok=false}else setErr("eemail");
+    if(!ok){$("earlyForm").querySelector(".bad input")?.focus();return}
+    const b=$("earlyBtn"), note=$("earlyNotice");
+    note.hidden=true; b.disabled=true; $("earlyLabel").textContent="Saving your place…";
+    try{
+      let out={ok:true,position:1};
+      if(CONFIG.ENDPOINT && !PREVIEW_FULL){
+        const res=await fetch(CONFIG.ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(e)});
+        out=await res.json();
+      }
+      if(!out.ok) throw new Error(out.error||"save failed");
+      $("placeNo").textContent=out.position;
+      $("earlyName").textContent=e.name;
+      $("earlyText").textContent=(out.again?"You were already in line. ":"")+"We'll email "+e.email+" before registration for the next Hangout opens to everyone.";
+      $("earlyWa").href="https://wa.me/?text="+encodeURIComponent("The Fit Hangout on 31 October is full 🔥 I'm #"+out.position+" in line for the next one. Get in line before it opens: "+CONFIG.SITE_URL);
+      $("earlyView").hidden=true; $("earlyDone").hidden=false;
+      burst();
+    }catch(err){
+      note.textContent="We couldn't save your place. Check your connection and try again.";
+      note.hidden=false;
+    }finally{b.disabled=false;$("earlyLabel").textContent="Get in line";}
+  });
 
   // Build interest chips
   const chips = $("chips");
@@ -401,6 +528,7 @@ const ACTIVITIES = ["SocaKombat","CrossFit","Resistance / Strength Training","St
           notice.textContent=d.email+" is already registered. Check your inbox (and spam) for the email \"Your Hangout Pass\". To register someone else, use their own email.";
           notice.hidden=false; return;
         }
+        if(out.error==="full"){ showFull(181); $("fullTitle").focus({preventScroll:true}); return; }
         if(!out.ok) throw new Error(out.error||"save failed");
         if(out.code) d.code=out.code;
       }
