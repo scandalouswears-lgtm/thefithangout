@@ -229,7 +229,7 @@ button,.btn{font:inherit;cursor:pointer;text-decoration:none}
 
   <section class="reg" aria-live="polite">
     <div id="formView">
-      <p class="scarce" id="scarce" hidden><i></i><span>Only <b id="leftCount"></b> spots left</span></p>
+      <p class="scarce" id="scarce" hidden><i></i><span>Only <b id="leftCount"></b> <span id="spotWord">spots</span> left</span></p>
       <div class="reg-head">
         <h2 class="caps">Register</h2>
         <span class="stepcount caps" id="stepCount">Step 1 of 4</span>
@@ -398,11 +398,25 @@ const ACTIVITIES = ["SocaKombat","CrossFit","Resistance / Strength Training","St
   const PREVIEW_FULL = /[?&]preview=full\b/.test(location.search);
   if(PREVIEW_FULL) showFull(181);
   else if(CONFIG.ENDPOINT){
-    fetch(CONFIG.ENDPOINT+"?status=1").then(r=>r.json()).then(s=>{
-      if(!s.ok) return;
-      if(!s.open) showFull(s.capacity);
-      else if(s.left<=30){ $("leftCount").textContent=s.left; $("scarce").hidden=false; }
-    }).catch(()=>{});
+    // Re-check every 20s while the tab is visible, so the spots-left count stays live without refreshing
+    let isFull=false;
+    const checkStatus=()=>{
+      if(isFull||document.hidden) return;
+      fetch(CONFIG.ENDPOINT+"?status=1").then(r=>r.json()).then(s=>{
+        if(!s.ok) return;
+        if(!s.open){
+          isFull=true;
+          // Don't replace someone's own pass with the full-house view
+          if($("thanks").hidden) showFull(s.capacity);
+          return;
+        }
+        $("leftCount").textContent=s.left; $("spotWord").textContent=s.left===1?"spot":"spots";
+        $("scarce").hidden=s.left>30;
+      }).catch(()=>{});
+    };
+    checkStatus();
+    setInterval(checkStatus,20000);
+    document.addEventListener("visibilitychange",checkStatus);
   }
 
   function showFull(cap){
